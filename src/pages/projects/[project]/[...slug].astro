@@ -1,0 +1,199 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import { fetchPinnedRepos } from '../../../lib/github';
+
+export async function getStaticPaths() {
+	const entries = await getCollection('docs');
+
+	return entries.map((entry) => {
+		const [project, ...rest] = entry.id.split('/');
+		const slug = rest.join('/');
+		return {
+			params: { project, slug: slug || undefined },
+			props: { entry },
+		};
+	});
+}
+
+interface Props {
+	entry: CollectionEntry<'docs'>;
+}
+
+const { entry } = Astro.props;
+const { project } = Astro.params;
+const { Content } = await render(entry);
+
+const allDocs = await getCollection('docs');
+const pages = allDocs
+	.filter((doc) => doc.id.split('/')[0] === project)
+	.sort((a, b) => (a.data.order ?? Infinity) - (b.data.order ?? Infinity) || a.data.title.localeCompare(b.data.title));
+
+const repos = await fetchPinnedRepos();
+const repo = repos.find((r) => r.name === project);
+---
+
+<Layout title={`${entry.data.title} · ${project}`}>
+	<div class="layout" transition:name={`project-${project}`}>
+		<aside>
+			<p class="project-name">{project}</p>
+			{repo && (
+				<a class="github-link" href={repo.html_url} target="_blank" rel="noopener noreferrer">
+					View on GitHub ↗
+				</a>
+			)}
+			<nav>
+				{pages.map((page) => {
+					const href =
+						page.id === project ? `/projects/${project}/` : `/projects/${page.id}/`;
+					return (
+						<a href={href} aria-current={page.id === entry.id ? 'page' : undefined}>
+							{page.data.title}
+						</a>
+					);
+				})}
+			</nav>
+		</aside>
+		<main>
+			<a class="back" href="/">← Back to all projects</a>
+			<h1>{entry.data.title}</h1>
+			<article>
+				<Content />
+			</article>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	.layout {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 2.5rem 1.5rem 5rem;
+		display: grid;
+		grid-template-columns: 220px 1fr;
+		gap: 2.5rem;
+		font-family: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+	}
+
+	aside {
+		position: sticky;
+		top: 5rem;
+		align-self: start;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.project-name {
+		font-weight: 700;
+		color: #111827;
+		margin: 0;
+		word-break: break-word;
+	}
+
+	.github-link {
+		font-size: 0.85rem;
+		color: #4b5563;
+		text-decoration: none;
+	}
+
+	.github-link:hover {
+		color: #111827;
+	}
+
+	aside nav {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin-top: 0.5rem;
+		border-top: 1px solid #e5e7eb;
+		padding-top: 0.75rem;
+	}
+
+	aside nav a {
+		text-decoration: none;
+		color: #4b5563;
+		font-size: 0.9rem;
+		padding: 0.4rem 0.6rem;
+		border-radius: 8px;
+	}
+
+	aside nav a:hover {
+		background: #f3f4f6;
+		color: #111827;
+	}
+
+	aside nav a[aria-current='page'] {
+		background: #111827;
+		color: #ffffff;
+	}
+
+	main {
+		min-width: 0;
+		background: #ffffff;
+		border-radius: 14px;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+		padding: 2rem 2.5rem;
+	}
+
+	.back {
+		display: inline-block;
+		font-size: 0.85rem;
+		color: #4b5563;
+		text-decoration: none;
+		margin-bottom: 1.5rem;
+	}
+
+	.back:hover {
+		color: #111827;
+	}
+
+	h1 {
+		margin: 0 0 1.5rem;
+		color: #111827;
+	}
+
+	article {
+		color: #1f2937;
+		line-height: 1.7;
+	}
+
+	article :global(h1),
+	article :global(h2),
+	article :global(h3) {
+		color: #111827;
+	}
+
+	article :global(pre) {
+		background: #111827;
+		color: #f3f4f6;
+		padding: 1rem;
+		border-radius: 10px;
+		overflow-x: auto;
+	}
+
+	article :global(code) {
+		background: #f3f4f6;
+		padding: 0.15rem 0.4rem;
+		border-radius: 6px;
+	}
+
+	article :global(pre code) {
+		background: none;
+		padding: 0;
+	}
+
+	article :global(a) {
+		color: #2563eb;
+	}
+
+	@media (max-width: 720px) {
+		.layout {
+			grid-template-columns: 1fr;
+		}
+
+		aside {
+			position: static;
+		}
+	}
+</style>

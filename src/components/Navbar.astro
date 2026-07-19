@@ -1,0 +1,51 @@
+---
+const GITHUB_USERNAME = 'moizifty';
+---
+
+<header>
+	<nav>
+		<a href="/" class="brand">Pinned Projects</a>
+		<a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noopener noreferrer">
+			GitHub
+		</a>
+	</nav>
+</header>
+
+<style>
+	header {
+		background: #ffffff;
+		border-bottom: 1px solid #e5e7eb;
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+
+	nav {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 1rem 1.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-family: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+	}
+
+	nav a {
+		text-decoration: none;
+		color: #111827;
+	}
+
+	.brand {
+		font-weight: 700;
+		font-size: 1.1rem;
+	}
+
+	nav a:not(.brand) {
+		color: #4b5563;
+		font-size: 0.95rem;
+	}
+
+	nav a:not(.brand):hover {
+		color: #111827;
+	}
+</style>
