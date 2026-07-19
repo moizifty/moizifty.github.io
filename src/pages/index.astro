@@ -19,13 +19,16 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 					const href = hasDocs ? `/projects/${repo.name}/` : repo.html_url;
 					return (
 						<a
-							class="tile"
+							class:list={['tile', { 'has-docs': hasDocs }]}
 							href={href}
 							target={hasDocs ? undefined : '_blank'}
 							rel={hasDocs ? undefined : 'noopener noreferrer'}
 							transition:name={`project-${repo.name}`}
 						>
-							<h2>{repo.name}</h2>
+							<div class="tile-header">
+								<h2>{repo.name}</h2>
+								{hasDocs && <span class="docs-badge">📄 Docs</span>}
+							</div>
 							{repo.description && <p>{repo.description}</p>}
 							<div class="meta">
 								{repo.language && <span class="language">{repo.language}</span>}
@@ -80,11 +83,41 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 		box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
 	}
 
+	.tile.has-docs {
+		box-shadow:
+			0 0 0 2px #bfdbfe,
+			0 4px 14px rgba(0, 0, 0, 0.1);
+	}
+
+	.tile.has-docs:hover {
+		box-shadow:
+			0 0 0 2px #93c5fd,
+			0 10px 24px rgba(0, 0, 0, 0.16);
+	}
+
+	.tile-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
 	.tile h2 {
-		margin: 0 0 0.5rem;
+		margin: 0;
 		font-size: 1.1rem;
 		color: #111827;
 		word-break: break-word;
+	}
+
+	.docs-badge {
+		flex-shrink: 0;
+		font-size: 0.72rem;
+		font-weight: 600;
+		color: #1d4ed8;
+		background: #dbeafe;
+		padding: 0.2rem 0.55rem;
+		border-radius: 999px;
 	}
 
 	.tile p {
