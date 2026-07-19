@@ -1,11 +1,160 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const GITHUB_USERNAME = 'moizifty';
+
+const PINNED_ITEMS_QUERY = `
+	query ($login: String!) {
+		user(login: $login) {
+			pinnedItems(first: 6, types: [REPOSITORY]) {
+				nodes {
+					... on Repository {
+						name
+						description
+						url
+						stargazerCount
+						primaryLanguage {
+							name
+						}
+					}
+				}
+			}
+		}
+	}
+`;
+
+async function fetchPinnedRepos(username) {
+	const token = process.env.GITHUB_TOKEN;
+
+	if (!token) {
+		console.warn(
+			'GITHUB_TOKEN is not set — skipping pinned repos fetch. Set GITHUB_TOKEN (a GitHub personal access token) to fetch pinned repos.'
+		);
+		return [];
+	}
+
+	const res = await fetch('https://api.github.com/graphql', {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${token}`,
+			'Content-Type': 'application/json',
+			'User-Agent': 'astro-build',
+		},
+		body: JSON.stringify({ query: PINNED_ITEMS_QUERY, variables: { login: username } }),
+	});
+
+	if (!res.ok) {
+		console.warn(`GitHub GraphQL request failed: ${res.status} ${res.statusText}`);
+		return [];
+	}
+
+	const json = await res.json();
+	const nodes = json?.data?.user?.pinnedItems?.nodes ?? [];
+
+	return nodes.map((node) => ({
+		name: node.name,
+		description: node.description,
+		html_url: node.url,
+		stargazers_count: node.stargazerCount,
+		language: node.primaryLanguage?.name ?? null,
+	}));
+}
+
+const repos = await fetchPinnedRepos(GITHUB_USERNAME);
 ---
 
 <Layout>
-	<Welcome />
+	<main>
+		<h1>Pinned Projects</h1>
+		<div class="grid">
+			{
+				repos.map((repo) => (
+					<a class="tile" href={repo.html_url} target="_blank" rel="noopener noreferrer">
+						<h2>{repo.name}</h2>
+						{repo.description && <p>{repo.description}</p>}
+						<div class="meta">
+							{repo.language && <span class="language">{repo.language}</span>}
+							<span class="stars">★ {repo.stargazers_count.toLocaleString()}</span>
+						</div>
+					</a>
+				))
+			}
+		</div>
+	</main>
 </Layout>
+
+<style>
+	main {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem 5rem;
+		font-family: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+	}
+
+	h1 {
+		text-align: center;
+		font-size: 2rem;
+		color: #111827;
+		margin-bottom: 2.5rem;
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(260px, 300px));
+		justify-content: center;
+		gap: 1.5rem;
+	}
+
+	.tile {
+		display: flex;
+		flex-direction: column;
+		padding: 1.5rem;
+		border-radius: 14px;
+		background: #ffffff;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+		text-decoration: none;
+		color: inherit;
+		transition:
+			transform 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+
+	.tile:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+	}
+
+	.tile h2 {
+		margin: 0 0 0.5rem;
+		font-size: 1.1rem;
+		color: #111827;
+		word-break: break-word;
+	}
+
+	.tile p {
+		margin: 0 0 1rem;
+		font-size: 0.9rem;
+		line-height: 1.4;
+		color: #4b5563;
+		flex-grow: 1;
+	}
+
+	.meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 0.85rem;
+		color: #6b7280;
+	}
+
+	.language {
+		padding: 0.15rem 0.6rem;
+		border-radius: 999px;
+		background: #f3f4f6;
+	}
+
+	.stars {
+		font-weight: 600;
+		color: #b45309;
+	}
+</style>
