@@ -19,6 +19,22 @@ const { title = 'Pinned Projects' } = Astro.props;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<ClientRouter />
+		<script is:inline>
+			(function () {
+				function getPreferredTheme() {
+					const stored = localStorage.getItem('theme');
+					if (stored === 'light' || stored === 'dark') return stored;
+					return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				}
+
+				function applyTheme(theme) {
+					document.documentElement.setAttribute('data-theme', theme);
+				}
+
+				applyTheme(getPreferredTheme());
+				document.addEventListener('astro:after-swap', () => applyTheme(getPreferredTheme()));
+			})();
+		</script>
 	</head>
 	<body>
 		<Navbar />
@@ -26,12 +42,80 @@ const { title = 'Pinned Projects' } = Astro.props;
 	</body>
 </html>
 
-<style>
+<style is:global>
+	html {
+		color-scheme: light dark;
+		accent-color: var(--color-accent);
+
+		--color-bg: oklch(98.48% 0 0);
+		--color-surface: oklch(100% 0 0);
+		--color-border: oklch(90% 0 0);
+		--color-text: oklch(26.99% 0.0096 235.05);
+		--color-muted: oklch(44.6% 0.03 256.802);
+		--color-link: oklch(55.44% 0.0431 185.69);
+		--color-accent: oklch(55.27% 0.195 19.06);
+		--color-accent-2: oklch(18.15% 0 0);
+
+		--shadow-color: 220 3% 15%;
+
+		transition:
+			background-color 0.3s ease-in-out,
+			color 0.3s ease-in-out;
+	}
+
+	html[data-theme='dark'] {
+		--color-bg: oklch(23.64% 0.0045 248);
+		--color-surface: oklch(27% 0.006 248);
+		--color-border: oklch(35% 0.012 250);
+		--color-text: oklch(83.54% 0 264);
+		--color-muted: oklch(70.7% 0.022 261.325);
+		--color-link: oklch(70.44% 0.1133 349);
+		--color-accent: oklch(70.91% 0.1415 163.7);
+		--color-accent-2: oklch(94.66% 0 0);
+
+		--shadow-color: 220 40% 2%;
+	}
+
 	html,
 	body {
 		margin: 0;
 		width: 100%;
 		min-height: 100%;
-		background: #f3f4f6;
+	}
+
+	body {
+		background: var(--color-bg);
+		color: var(--color-text);
+		font-family:
+			Inter,
+			Roboto,
+			'Helvetica Neue',
+			'Arial Nova',
+			'Nimbus Sans',
+			Arial,
+			sans-serif;
+	}
+
+	a {
+		color: var(--color-link);
+	}
+
+	.cactus-link {
+		text-underline-offset: 2px;
+	}
+
+	.cactus-link:hover {
+		text-decoration-color: var(--color-link);
+		text-decoration-thickness: 2px;
+	}
+
+	code {
+		border: 1px dotted var(--color-muted);
+		border-radius: 2px;
+	}
+
+	hr {
+		border: none;
+		border-top: 1px dashed var(--color-border);
 	}
 </style>

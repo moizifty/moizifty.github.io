@@ -47,13 +47,13 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 3rem 1.5rem 5rem;
-		font-family: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
 	}
 
 	h1 {
 		text-align: center;
-		font-size: 2rem;
-		color: #111827;
+		font-size: 2.25rem;
+		font-weight: 700;
+		color: var(--color-accent-2);
 		margin-bottom: 2.5rem;
 	}
 
@@ -69,30 +69,31 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 		flex-direction: column;
 		padding: 1.5rem;
 		border-radius: 14px;
-		background: #ffffff;
-		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		box-shadow: 0 4px 14px hsl(var(--shadow-color) / 10%);
 		text-decoration: none;
 		color: inherit;
 		transition:
 			transform 0.2s ease,
-			box-shadow 0.2s ease;
+			box-shadow 0.2s ease,
+			border-color 0.2s ease;
 	}
 
 	.tile:hover {
 		transform: translateY(-4px);
-		box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+		border-color: var(--color-muted);
+		box-shadow: 0 10px 24px hsl(var(--shadow-color) / 18%);
 	}
 
 	.tile.has-docs {
-		box-shadow:
-			0 0 0 2px #bfdbfe,
-			0 4px 14px rgba(0, 0, 0, 0.1);
+		border-color: var(--color-accent);
 	}
 
 	.tile.has-docs:hover {
 		box-shadow:
-			0 0 0 2px #93c5fd,
-			0 10px 24px rgba(0, 0, 0, 0.16);
+			0 0 0 1px var(--color-accent),
+			0 10px 24px hsl(var(--shadow-color) / 18%);
 	}
 
 	.tile-header {
@@ -106,7 +107,8 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 	.tile h2 {
 		margin: 0;
 		font-size: 1.1rem;
-		color: #111827;
+		font-weight: 600;
+		color: var(--color-accent-2);
 		word-break: break-word;
 	}
 
@@ -114,8 +116,8 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 		flex-shrink: 0;
 		font-size: 0.72rem;
 		font-weight: 600;
-		color: #1d4ed8;
-		background: #dbeafe;
+		color: var(--color-accent);
+		border: 1px solid var(--color-accent);
 		padding: 0.2rem 0.55rem;
 		border-radius: 999px;
 	}
@@ -124,7 +126,7 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 		margin: 0 0 1rem;
 		font-size: 0.9rem;
 		line-height: 1.4;
-		color: #4b5563;
+		color: var(--color-muted);
 		flex-grow: 1;
 	}
 
@@ -133,17 +135,17 @@ const projectsWithDocs = new Set(docsEntries.map((entry) => entry.id.split('/')[
 		align-items: center;
 		justify-content: space-between;
 		font-size: 0.85rem;
-		color: #6b7280;
+		color: var(--color-muted);
 	}
 
 	.language {
 		padding: 0.15rem 0.6rem;
 		border-radius: 999px;
-		background: #f3f4f6;
+		border: 1px dashed var(--color-border);
 	}
 
 	.stars {
 		font-weight: 600;
-		color: #b45309;
+		color: var(--color-accent);
 	}
 </style>
