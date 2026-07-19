@@ -3,16 +3,13 @@ title: Overview
 order: 0
 ---
 
-Base is a library used across all of my C programs. It has work-in-progress
-Linux support and (currently more complete) Windows support.
+Base is a library used across all of my C programs. It is cross platform, currently only supporting Linux and Windows. The support for Linux is functional (most programs compile) but is still incomplete.
 
-It bundles two extra tools:
+Within Base, there are 2 extra tools which are compiled as executables but can also be used as a library.
 
-- **[Metagen](/projects/base/metagen/)** — a metagenerator for C source: type
-  reflection at runtime, embedding files into headers, and a `defer`
-  statement implementation for C.
+- **[Metagen](/projects/base/metagen/)** (`base/metagen`) — A metacode generator for C source files. See **[Metagen](/projects/base/metagen/)** for more information.
 - **[BSS](/projects/base/bss/)** (`base/bss`) — a small interpreted build
-  scripting language, Python-like semantics with C-like syntax.
+  scripting language, Python-like semantics with C-like syntax. See **[BSS](/projects/base/bss/)** for more information
 
 The Windows support is ahead of Linux right now — more of the Win32 API is
 wrapped than the Linux equivalent — but most programs (including `amp`)
