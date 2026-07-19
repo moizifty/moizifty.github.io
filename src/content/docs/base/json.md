@@ -1,10 +1,9 @@
 ---
 title: JSON
-order: 10
+order: 11
 ---
 
-A small JSON parser (`src/json`) that parses into a single `JSONValue`
-tree via `JSONValueFromStr8`:
+A small JSON parser (`src/json`) that parses into a single `JSONValue` tree via `JSONValueFromStr8`:
 
 ```c
 typedef enum JSONValueKind
@@ -19,25 +18,59 @@ typedef enum JSONValueKind
 } JSONValueKind;
 ```
 
-Every value also keeps `strRep` — the original source-text slice it was
-parsed from.
+Every value also keeps `strRep` around, the original source-text slice it was parsed from.
 
 ## Path lookups
 
-Rather than walking the tree by hand, look values up with a dotted path
-string:
+Rather than walking the tree by hand I look values up with a dotted path string instead:
+
+```json
+
+{
+    "obj": 
+    {
+        "child":
+        {
+            "array":
+            [
+                {
+                    "name": "Test1"
+                },
+
+                {
+                    "name": "Test2"
+                },
+
+                {
+                    "name": "Test3"
+                },
+            ],
+
+            "count": 3
+        },
+
+        "flag": true
+    }
+}
+
+```
 
 ```c
 JSONValue root = JSONValueFromStr8(arena, jsonText);
 
+// = 3
 f64 count = jsonFindNumber(&root, STR8_LIT("obj.child.count"), 0);
+
+// = Test1
 str8 name = jsonFindStr8(&root, STR8_LIT("obj.child.array.0.name"), STR8_LIT(""));
+
+// = Test1, Test2, Test3
+JSONValuePtrList names = jsonFindAll(&root, STR8_LIT("obj.child.array.name"));
+
+// false
 bool ok = jsonFindBool(&root, STR8_LIT("obj.flag"), false);
 ```
 
-Array indices are just numeric path segments — `obj.child.array.9`, or
-nested further like `obj.child.array.12.name.len.1`. Each `jsonFind*`
-variant takes a default value returned if the path doesn't resolve or
-doesn't match the expected kind. `jsonFind` itself returns the raw
-`JSONValue*` (or `null`) if you need the kind or a sub-tree rather than a
-coerced scalar; `jsonArrayIndex` indexes an array value directly.
+Array indices are just numeric path segments, `obj.child.array.9`, and you can nest as deep as you want, `obj.child.array.12.name.len.1`. Every `jsonFind*` variant takes a default value to fall back on if the path doesn't resolve or doesn't match the kind you asked for. `jsonFind` on its own returns the raw `JSONValue*` (or `null`) if you want the kind or a sub-tree instead of a coerced scalar, and `jsonArrayIndex` indexes an array value directly.
+
+Nothing in the codebase actually parses JSON yet, this was written ahead of needing it, mainly for parsing gltf 3d model files.

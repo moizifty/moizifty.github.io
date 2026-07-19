@@ -1,10 +1,9 @@
 ---
 title: Bitmap
-order: 7
+order: 8
 ---
 
-`src/bitmap` centers on one `Bitmap` type that every decoder converts
-into:
+`src/bitmap` centers on one `Bitmap` type that every decoder converts into:
 
 ```c
 typedef struct Bitmap
@@ -18,25 +17,8 @@ typedef struct Bitmap
 
 ## Decoders
 
-All three are implemented from scratch — no `stb_image`.
-
-- **PNG** (`bitmapPNG.h`) — `bitmapFromPNGPath`/`Raw`. Walks the chunk
-  stream (`IHDR`/`IDAT`/`PLTE`/`IEND`) and pipes `IDAT` data through the
-  [DEFLATE decoder](/projects/base/compression/).
-- **QOI** (`bitmapQOI.h`) — `bitmapFromQOIPath`/`Raw`, built on
-  [`Bitstream`](/projects/base/datastructures/).
-- **DDS** (`bitmapDDS.h`) — `bitmapFromDDSPath`/`Raw`, including DXT1/
-  DXT3/DXT5 block decompression (`bitmapDDSCalculateColorsFromDXT1Block`
-  and friends).
+All three are written from scratch, no `stb_image`. PNG (`bitmapPNG.h`, via `bitmapFromPNGPath`/`Raw`) walks the chunk stream (`IHDR`/`IDAT`/`PLTE`/`IEND`) and pipes `IDAT` data through my own [DEFLATE decoder](/projects/base/compression/). QOI (`bitmapQOI.h`, `bitmapFromQOIPath`/`Raw`) is built on [`Bitstream`](/projects/base/datastructures/). DDS (`bitmapDDS.h`, `bitmapFromDDSPath`/`Raw`) includes DXT1/DXT3/DXT5 block decompression (`bitmapDDSCalculateColorsFromDXT1Block` and friends).
 
 ## Direct pixel access (`bitmapCore.h`)
 
-- `bitmapPush` — allocate a new `Bitmap` of a given size/format from an
-  arena.
-- `bitmapGetPixelColor4u8` / `bitmapSetPixelColor4u8` — per-pixel
-  read/write.
-- `bitmapClear`, `bitmapDrawPixel`, `bitmapDrawRect`, `bitmapDrawLine`.
-- `bitmapBlitToBitmap` — copy a region between bitmaps, resolved through a
-  `BitmapSampler` (edge addressing: wrap/clamp/discard, plus an alpha
-  `BitmapBlendOp`). `bitmapFastBlitToBitmap` skips the sampler for a
-  same-format straight memcpy-style copy.
+`bitmapPush` allocates a new `Bitmap` of a given size and format from an arena. `bitmapGetPixelColor4u8`/`bitmapSetPixelColor4u8` are the per-pixel read/write, and `bitmapClear`/`bitmapDrawPixel`/`bitmapDrawRect`/`bitmapDrawLine` do the obvious. `bitmapBlitToBitmap` copies a region between bitmaps through a `BitmapSampler`, which controls edge addressing (wrap/clamp/discard) and alpha blending. `bitmapFastBlitToBitmap` skips the sampler entirely for a same-format straight copy when you don't need any of that.

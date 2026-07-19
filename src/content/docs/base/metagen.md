@@ -1,17 +1,16 @@
 ---
 title: Metagen
-order: 1
+order: 2
 ---
 
-Metagen is a standalone command-line tool (`src/metagen`, builds to `mg.exe`)
-that reads C source files and generates code from marker macros left in
-them. It isn't a Clang-based tool — it tokenizes source with Base's own
-hand-written C lexer (`baseCLexer`) and works on the token stream directly.
+Metagen is a standalone command line tool (`src/metagen`, builds to `src/metagen/builds/mg.exe`)
+that lex's C source files and generates code from marker macros left in
+them. It doesnt use clang but instead tokenizes source with Base's own
+hand-written C lexer (`base/baseCLexer.c`) and works on the token stream directly. 
 
 It has its own private copy of `base/` and `os/` under `src/metagen/base`
 and `src/metagen/os` (see `src/metagen/readme.txt`) so it can always be
-built, even if the marker macros it's about to process would otherwise
-produce code that doesn't compile yet against the "real" `base`.
+built in the case that it generates incorrect or broken code.
 
 ## Marker macros
 
@@ -22,20 +21,17 @@ token stream:
 | Macro                             | Purpose                                             |
 | ---------------------------------- | ---------------------------------------------------- |
 | `metagen_introspect(...)`          | Generate a reflection table for the struct/enum below it |
-| `metagen_introspectenum(...)`      | Same, for enums                                     |
 | `metagen_introspectexclude(...)`   | Exclude a member from the generated reflection table |
 | `metagen_introspectnote(...)`      | Attach a note string to a member (read by things like `cmdlineStruct`) |
-| `metagen_genprintstructmemb(...)`  | Generate the custom-type switch cases for `StructToStr8` |
-| `metagen_gentable(...)`            | Generate a lookup table                             |
 | `metagen_embedfile(name, path, mode)` | Embed a file's bytes as a generated array         |
 | `metagen_defer`                    | Mark a scope's defer statements for the defer pass  |
 | `metagen_lambda(...)`              | Mark an inline lambda for the lambda pass           |
 
-Metagen runs as two independent passes, chosen with CLI flags.
+Metagen runs as two togglable passes, chosen with CLI flags.
 
 ## Metadata pass (`--metadata`)
 
-Walks every `metagen_introspect(...)`-tagged struct or enum, parses its
+Walks every `metagen_introspect(...)` tagged struct or enum, parses its
 member declarations (name, type, size, offset, array/pointer-ness), and
 writes a `<file>.gen.h` / `<file>.gen.c` pair next to the input containing
 a `MetagenStructMemb` array and a `MetagenStruct` descriptor for it — the
@@ -60,10 +56,8 @@ extern MetagenStructMembArray gDateTimeMembDefsTable;
 extern MetagenStruct gDateTimeStructInfo;
 ```
 
-`only: "x", "y"` restricts the table to specific members — used on
-`vec2f`/`vec2i`/`vec3f` in `baseMath.h`, since those structs union a named
-`x`/`y`/`z` view over a `v[]` array and reflecting both would just
-duplicate the same bytes:
+`only: "x", "y"` restricts the table to specific members — this is useful for only 
+restricting the generated info to certain fields on unions.
 
 ```c
 metagen_introspect(only: "x", "y")
@@ -73,16 +67,19 @@ typedef struct vec2f
 } vec2f;
 ```
 
-`metagen_genprintstructmemb()` (used once, in `base/baseMetagen.c`) collects
-every introspected type across all processed files and generates the
-`METAGEN_PRINT_MEMB_CUSTOM` switch cases in `baseMetagenCommon.gen.h`, so
-`StructToStr8` knows how to recursively print a struct-typed member, not
-just primitives. `metagen_embedfile(name, path, mode)` embeds a file's raw
+`metagen_embedfile(name, path, mode)` embeds a file's raw
 bytes as a generated `u8[]` array under `name`.
+
+```c
+metagen_embedfile(gFontData, "../font.ttf", binary)
+
+// this generates:
+U8Array gFontData = {...};
+```
 
 ## Defer pass (`--defers`)
 
-Walks `defer(...)` calls and rewrites the *source itself* into a parallel
+Walks `metagen_defer(...)` calls and rewrites the *source itself* into a parallel
 `metagen_defer_temp/` folder, which you compile from instead of the
 original source:
 
@@ -103,9 +100,11 @@ metagen_defer_temp
      |--- another.h
 ```
 
-`defer(...)` emits its code at `return`, `break`, `goto`, and `continue`
+`metagen_defer(...)` emits its code at `return`, `break`, `goto`, and `continue`
 statements, as well as at the end of the enclosing block if it wasn't
 already emitted earlier in that block. It's been reliable in practice.
+
+Due to how they function, sadly, `metagen_defer` and `metagen_lambda` cant be used in `base` itself, since that means you will have to metagen code for base and it becomes a bit cumbersome to juggle between `metagen_defer_temp/base` and regular `base`.
 
 ## Lambdas
 

@@ -1,41 +1,24 @@
 ---
 title: Font
-order: 8
+order: 9
 ---
 
-`src/font` is a from-scratch TrueType parser and glyph rasterizer — no
-FreeType or `stb_truetype`.
+`src/font` is a from-scratch TrueType parser and glyph rasterizer, no FreeType, no `stb_truetype`.
 
 ## Parsing (`fontTTF.*`)
 
-Parses the TTF table set directly off the raw file bytes: `cmap` (formats
-4 and 12, for codepoint → glyph index), `head`, `hhea`, `hmtx`, `loca`, and
-`glyf` — including composite glyphs
-(`fontTTFParseCompositeGlyphNumContoursAndPoints`).
+Parses the TTF table set directly off the raw file bytes: `cmap` (formats 4 and 12, for codepoint to glyph index), `head`, `hhea`, `hmtx`, `loca`, and `glyf`, including composite glyphs (`fontTTFParseCompositeGlyphNumContoursAndPoints`).
 
 ```c
 Font font = fontTTFParseFromFile(arena, STR8_LIT("fonts/Verdana.ttf"));
 if (font.error != FONT_ERROR_NONE) { /* missing/unsupported table */ }
 ```
 
-`fontTTFParseFromFile`/`FromU8Array` run the whole table set and hand back
-a `Font` with its parsed tables and computed `FontMetrics` (units-per-em,
-bounds, ascent/descent/line gap).
+`fontTTFParseFromFile`/`FromU8Array` run the whole table set and hand back a `Font`, with its parsed tables and a computed `FontMetrics` (units-per-em, bounds, ascent/descent/line gap).
 
 ## Rasterizing (`fontCore.*`)
 
-A glyph's outline becomes a `FontGlyphShape` — points, contours, and
-per-edge winding. `fontRasteriseGlyphShapeToBitmap` scan-converts that
-onto a `Bitmap` at a given pixel size, with a choice of
-`FontRasteriseAntiAliasingKind`:
-
-- `FONT_RASTERISE_ANTI_ALIASING_NONE`
-- `FONT_RASTERISE_ANTI_ALIASING_NAIVE`
-- `FONT_RASTERISE_ANTI_ALIASING_COVERAGE_ACCUMULATION`
-
-`fontRasteriseCodepointToBitmap` does codepoint → glyph lookup and
-rasterization in one call; `fontGetGlyphIndexFromCodepoint`/
-`fontGetGlyphFromCodepoint` expose the lookup on its own.
+A glyph's outline becomes a `FontGlyphShape`, points, contours, and per-edge winding. `fontRasteriseGlyphShapeToBitmap` scan-converts that onto a `Bitmap` at a given pixel size, and you get to pick the `FontRasteriseAntiAliasingKind`: none, naive, or coverage accumulation. `fontRasteriseCodepointToBitmap` does the codepoint to glyph lookup and rasterization in one call if you don't need the intermediate shape, and `fontGetGlyphIndexFromCodepoint`/`fontGetGlyphFromCodepoint` expose that lookup on its own.
 
 ## Atlases (`fontAtlas.*`)
 
@@ -49,8 +32,4 @@ if (fontAtlasTryGetGlyphFromCodepoint(atlas, 'A', &glyph)) {
 }
 ```
 
-`fontAtlasFromCodepointRanges` rasterizes every codepoint in the given
-ranges into one atlas `Bitmap`, plus a `FontAtlasGlyph` table (position,
-size, bearings, advance width). ASCII is packed first in the glyph array
-for O(1) access by ASCII code; anything else goes through
-`fontAtlasTryGetGlyphFromCodepoint`.
+`fontAtlasFromCodepointRanges` rasterizes every codepoint in the given ranges into one atlas `Bitmap`, plus a `FontAtlasGlyph` table with position, size, bearings and advance width for each one. ASCII gets packed first in the glyph array so lookups by ASCII code are fast, anything outside that range goes through `fontAtlasTryGetGlyphFromCodepoint` instead.
